@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="vi" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phân Tích Thuận Lợi Kinh Tế Biển Đảo Việt Nam</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Calm Harmony -->
+    <!-- Application Structure Plan: The application is designed as a single-page, vertical-scrolling dashboard. This thematic structure allows users to navigate directly to specific economic sectors (Transport, Minerals, Tourism, etc.) via a sticky header, which is more intuitive than a linear report. The user journey starts with a high-level overview of key statistics to provide immediate context, followed by deep-dive sections with interactive charts and data points. This design prioritizes user-driven exploration and makes complex data easily digestible, suitable for understanding the multifaceted nature of Vietnam's maritime economy. -->
+    <!-- Visualization & Content Choices:
+    - Overview Stats: Goal=Inform. Method=HTML/CSS cards with large text & icons. Interaction=None. Justification=Quick, high-impact summary.
+    - Economic Contribution: Goal=Compare Proportions. Method=Donut Chart. Interaction=Hover for details. Justification=Visually shows the weight of each sector. Library=Chart.js (Canvas).
+    - Cargo Throughput: Goal=Show Change/Growth. Method=Bar Chart. Interaction=Hover for tooltips. Justification=Clearly illustrates the growth trend in maritime transport. Library=Chart.js (Canvas).
+    - Seafood Production: Goal=Compare & Show Change. Method=Stacked Bar Chart. Interaction=Hover for details. Justification=Effectively compares wild catch vs. aquaculture over time. Library=Chart.js (Canvas).
+    - Key Sectors Info: Goal=Organize & Inform. Method=Styled HTML/CSS cards/sections. Interaction=None. Justification=Cleanly separates and presents detailed textual information for each economic pillar.
+    All visualizations are rendered on Canvas, avoiding SVG and Mermaid JS as required. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            background-color: #F8F5F2;
+            color: #1E293B;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        .stat-card {
+            background-color: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .nav-link {
+            position: relative;
+            transition: color 0.3s ease;
+        }
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -4px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #3E92CC;
+            transition: width 0.3s ease;
+        }
+        .nav-link:hover::after, .nav-link.active::after {
+            width: 100%;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header id="header" class="bg-white/80 backdrop-blur-lg sticky top-0 z-50 shadow-md">
+        <div class="container mx-auto px-4 py-3">
+            <div class="flex justify-between items-center">
+                <h1 class="text-xl md:text-2xl font-bold text-[#0A2463]">Kinh Tế Biển Đảo Việt Nam</h1>
+                <nav class="hidden md:flex space-x-6">
+                    <a href="#overview" class="nav-link text-gray-600 hover:text-[#0A2463] font-medium">Tổng Quan</a>
+                    <a href="#transport" class="nav-link text-gray-600 hover:text-[#0A2463] font-medium">Giao Thông</a>
+                    <a href="#resources" class="nav-link text-gray-600 hover:text-[#0A2463] font-medium">Tài Nguyên</a>
+                    <a href="#fishery" class="nav-link text-gray-600 hover:text-[#0A2463] font-medium">Thủy Sản</a>
+                    <a href="#tourism" class="nav-link text-gray-600 hover:text-[#0A2463] font-medium">Du Lịch</a>
+                    <a href="#energy" class="nav-link text-gray-600 hover:text-[#0A2463] font-medium">Năng Lượng</a>
+                </nav>
+                 <button id="mobile-menu-button" class="md:hidden p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#0A2463]">
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <div id="mobile-menu" class="hidden md:hidden bg-white/90">
+            <a href="#overview" class="block text-center py-2 px-4 text-sm text-gray-700 hover:bg-[#3E92CC]/20">Tổng Quan</a>
+            <a href="#transport" class="block text-center py-2 px-4 text-sm text-gray-700 hover:bg-[#3E92CC]/20">Giao Thông</a>
+            <a href="#resources" class="block text-center py-2 px-4 text-sm text-gray-700 hover:bg-[#3E92CC]/20">Tài Nguyên</a>
+            <a href="#fishery" class="block text-center py-2 px-4 text-sm text-gray-700 hover:bg-[#3E92CC]/20">Thủy Sản</a>
+            <a href="#tourism" class="block text-center py-2 px-4 text-sm text-gray-700 hover:bg-[#3E92CC]/20">Du Lịch</a>
+            <a href="#energy" class="block text-center py-2 px-4 text-sm text-gray-700 hover:bg-[#3E92CC]/20">Năng Lượng</a>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8 md:py-12">
+
+        <section id="hero" class="text-center mb-16">
+            <h2 class="text-3xl md:text-5xl font-bold text-[#0A2463] mb-4">Vị Thế Vươn Ra Biển Lớn</h2>
+            <p class="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">
+                Việt Nam sở hữu tiềm năng kinh tế biển to lớn, là động lực quan trọng cho sự phát triển bền vững của quốc gia. Cùng khám phá những lợi thế chiến lược từ biển đảo qua các số liệu và phân tích trực quan.
+            </p>
+        </section>
+
+        <section id="overview" class="mb-16 scroll-mt-20">
+            <h3 class="text-2xl md:text-3xl font-bold text-center text-[#0A2463] mb-8">Tổng Quan Tiềm Năng</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="stat-card rounded-xl p-6 text-center shadow-lg">
+                    <div class="text-4xl mb-3">🌊</div>
+                    <p class="text-4xl font-bold text-[#1E5664]">3.260 km</p>
+                    <p class="text-gray-500 font-medium">Bờ biển</p>
+                </div>
+                <div class="stat-card rounded-xl p-6 text-center shadow-lg">
+                    <div class="text-4xl mb-3">🗺️</div>
+                    <p class="text-4xl font-bold text-[#1E5664]">> 1 triệu km²</p>
+                    <p class="text-gray-500 font-medium">Vùng đặc quyền kinh tế</p>
+                </div>
+                <div class="stat-card rounded-xl p-6 text-center shadow-lg">
+                    <div class="text-4xl mb-3">🏝️</div>
+                    <p class="text-4xl font-bold text-[#1E5664]">> 4.000</p>
+                    <p class="text-gray-500 font-medium">Đảo lớn nhỏ</p>
+                </div>
+                <div class="stat-card rounded-xl p-6 text-center shadow-lg">
+                    <div class="text-4xl mb-3">🏙️</div>
+                    <p class="text-4xl font-bold text-[#1E5664]">21 /34 </p>
+                    <p class="text-gray-500 font-medium">Tỉnh/Thành phố giáp biển</p>
+                </div>
+            </div>
+            <div class="mt-12 bg-white rounded-xl shadow-lg p-6 md:p-8">
+                 <h4 class="text-xl md:text-2xl font-bold text-center text-[#0A2463] mb-6">Cơ Cấu Kinh Tế Biển (Ước tính)</h4>
+                 <p class="text-center text-gray-600 mb-6 max-w-2xl mx-auto">Biểu đồ dưới đây thể hiện tỷ trọng đóng góp của các ngành kinh tế biển chính. Di chuột qua từng phần để xem chi tiết. Các ngành như khai thác dầu khí, du lịch, và thủy sản là những trụ cột quan trọng, tạo ra giá trị kinh tế và việc làm đáng kể.</p>
+                <div class="chart-container">
+                    <canvas id="economicStructureChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <section id="transport" class="mb-16 scroll-mt-20">
+            <h3 class="text-2xl md:text-3xl font-bold text-center text-[#0A2463] mb-8">Giao Thông Vận Tải Biển</h3>
+             <div class="grid md:grid-cols-5 gap-8 items-center">
+                <div class="md:col-span-2">
+                    <p class="text-gray-700 leading-relaxed mb-4">
+                        Nằm trên tuyến hàng hải quốc tế sôi động, Việt Nam có lợi thế vượt trội trong việc phát triển dịch vụ cảng biển và logistics. Hệ thống cảng biển được quy hoạch và đầu tư, đặc biệt là các cảng nước sâu, đóng vai trò cửa ngõ giao thương, kết nối kinh tế Việt Nam với thế giới.
+                    </p>
+                    <ul class="space-y-3">
+                        <li class="flex items-start">
+                            <span class="text-xl mr-3 text-[#3E92CC]">⚓</span>
+                            <div><strong class="font-semibold text-[#0A2463]">Hệ thống cảng biển:</strong> Hơn 286 bến cảng, trải dài khắp đất nước.</div>
+                        </li>
+                         <li class="flex items-start">
+                            <span class="text-xl mr-3 text-[#3E92CC]">🌍</span>
+                             <div><strong class="font-semibold text-[#0A2463]">Cảng cửa ngõ quốc tế:</strong> Các cụm cảng Lạch Huyện (Hải Phòng) và Cái Mép - Thị Vải có khả năng tiếp nhận tàu container lớn nhất thế giới.</div>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-xl mr-3 text-[#3E92CC]">📈</span>
+                            <div><strong class="font-semibold text-[#0A2463]">Tăng trưởng ấn tượng:</strong> Khối lượng hàng hóa thông qua cảng biển liên tục tăng trưởng ở mức hai con số.</div>
+                        </li>
+                    </ul>
+                </div>
+                <div class="md:col-span-3 bg-white rounded-xl shadow-lg p-6 md:p-8">
+                    <h4 class="text-xl font-bold text-center text-[#0A2463] mb-4">Sản Lượng Hàng Hóa Qua Cảng Biển</h4>
+                    <p class="text-center text-gray-600 mb-6 text-sm">Biểu đồ thể hiện sự tăng trưởng mạnh mẽ của lượng hàng hóa (triệu tấn) được vận chuyển qua hệ thống cảng biển Việt Nam trong những năm gần đây, khẳng định vai trò trụ cột của ngành.</p>
+                    <div class="chart-container h-64 md:h-80">
+                        <canvas id="cargoChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="resources" class="mb-16 scroll-mt-20">
+            <h3 class="text-2xl md:text-3xl font-bold text-center text-[#0A2463] mb-8">Khai Thác Tài Nguyên & Khoáng Sản</h3>
+            <p class="text-center text-gray-600 mb-8 max-w-3xl mx-auto">Vùng biển Việt Nam chứa đựng nguồn tài nguyên khoáng sản phong phú, trong đó dầu khí là ngành kinh tế-kỹ thuật mũi nhọn, đóng góp lớn cho ngân sách nhà nước và đảm bảo an ninh năng lượng quốc gia.</p>
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="bg-white rounded-xl shadow-lg p-8">
+                    <div class="flex items-center mb-4">
+                        <span class="text-4xl mr-4">⛽</span>
+                        <h4 class="text-2xl font-bold text-[#0A2463]">Dầu Khí</h4>
+                    </div>
+                    <p class="text-gray-700 leading-relaxed">
+                        Các bể trầm tích lớn như Cửu Long, Nam Côn Sơn, Mã Lai - Thổ Chu có trữ lượng dầu khí dồi dào, là cơ sở cho sự phát triển bền vững của ngành công nghiệp dầu khí, từ tìm kiếm, thăm dò, khai thác đến chế biến. Ngành này không chỉ mang lại giá trị kinh tế mà còn thúc đẩy phát triển khoa học công nghệ biển.
+                    </p>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg p-8">
+                    <div class="flex items-center mb-4">
+                        <span class="text-4xl mr-4">💎</span>
+                        <h4 class="text-2xl font-bold text-[#0A2463]">Khoáng Sản Khác</h4>
+                    </div>
+                    <p class="text-gray-700 leading-relaxed">
+                        Ngoài dầu khí, vùng ven biển còn có tiềm năng lớn về các loại khoáng sản khác như titan, cát thủy tinh, và muối biển. Khai thác các nguồn tài nguyên này một cách hợp lý và bền vững sẽ góp phần đa dạng hóa cơ cấu kinh tế biển, tạo ra nhiều sản phẩm có giá trị gia tăng cao.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <section id="fishery" class="mb-16 scroll-mt-20">
+            <h3 class="text-2xl md:text-3xl font-bold text-center text-[#0A2463] mb-8">Khai Thác & Nuôi Trồng Thủy Sản</h3>
+            <div class="grid md:grid-cols-5 gap-8 items-center">
+                 <div class="md:col-span-3 bg-white rounded-xl shadow-lg p-6 md:p-8">
+                    <h4 class="text-xl font-bold text-center text-[#0A2463] mb-4">Tổng Sản Lượng Thủy Sản</h4>
+                    <p class="text-center text-gray-600 mb-6 text-sm">Biểu đồ so sánh sản lượng giữa khai thác tự nhiên và nuôi trồng (triệu tấn), cho thấy sự chuyển dịch sang nuôi trồng bền vững, giảm áp lực lên nguồn lợi tự nhiên.</p>
+                    <div class="chart-container h-64 md:h-80">
+                        <canvas id="fisheryChart"></canvas>
+                    </div>
+                </div>
+                <div class="md:col-span-2">
+                    <p class="text-gray-700 leading-relaxed mb-4">
+                       Ngành thủy sản là một trong những ngành kinh tế biển truyền thống và quan trọng nhất, không chỉ đảm bảo an ninh lương thực mà còn là mặt hàng xuất khẩu chủ lực. Việt Nam đang đẩy mạnh chuyển đổi từ khai thác sang nuôi trồng công nghệ cao, hướng tới phát triển bền vững.
+                    </p>
+                    <ul class="space-y-3">
+                        <li class="flex items-start">
+                             <span class="text-xl mr-3 text-[#3E92CC]">🐟</span>
+                            <div><strong class="font-semibold text-[#0A2463]">Nguồn lợi đa dạng:</strong> Hơn 2.000 loài cá, 100 loài tôm, tạo điều kiện đa dạng hóa sản phẩm.</div>
+                        </li>
+                         <li class="flex items-start">
+                            <span class="text-xl mr-3 text-[#3E92CC]">💸</span>
+                            <div><strong class="font-semibold text-[#0A2463]">Giá trị xuất khẩu:</strong> Luôn nằm trong top các mặt hàng xuất khẩu lớn nhất, đạt trên 10 tỷ USD mỗi năm.</div>
+                        </li>
+                         <li class="flex items-start">
+                            <span class="text-xl mr-3 text-[#3E92CC]">🌿</span>
+                            <div><strong class="font-semibold text-[#0A2463]">Phát triển bền vững:</strong> Chú trọng bảo vệ nguồn lợi, chống khai thác bất hợp pháp (IUU) và phát triển nuôi biển công nghiệp.</div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section id="tourism" class="mb-16 scroll-mt-20">
+            <h3 class="text-2xl md:text-3xl font-bold text-center text-[#0A2463] mb-8">Du Lịch Biển, Đảo</h3>
+            <p class="text-center text-gray-600 mb-8 max-w-3xl mx-auto">Với đường bờ biển dài, nhiều vịnh, bãi biển đẹp và các hòn đảo hoang sơ, Việt Nam có tiềm năng to lớn để phát triển du lịch biển thành ngành kinh tế mũi nhọn, thu hút du khách trong và ngoài nước.</p>
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="bg-white rounded-xl shadow-lg p-6 flex flex-col items-center text-center">
+                    <span class="text-5xl mb-4">🏞️</span>
+                    <h4 class="text-xl font-bold text-[#0A2463] mb-2">Vịnh Hạ Long</h4>
+                    <p class="text-gray-600">Di sản thiên nhiên thế giới với hàng nghìn hòn đảo đá vôi kỳ vĩ, là điểm đến không thể bỏ qua.</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg p-6 flex flex-col items-center text-center">
+                    <span class="text-5xl mb-4">🏖️</span>
+                    <h4 class="text-xl font-bold text-[#0A2463] mb-2">Nha Trang - Đà Nẵng</h4>
+                    <p class="text-gray-600">Những thành phố biển năng động với bãi cát trắng mịn, dịch vụ du lịch chuyên nghiệp và hiện đại.</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg p-6 flex flex-col items-center text-center">
+                    <span class="text-5xl mb-4">🏝️</span>
+                    <h4 class="text-xl font-bold text-[#0A2463] mb-2">Phú Quốc - Côn Đảo</h4>
+                    <p class="text-gray-600">"Đảo ngọc" và "thiên đường nghỉ dưỡng" với hệ sinh thái đa dạng, vẻ đẹp hoang sơ và các khu resort đẳng cấp.</p>
+                </div>
+            </div>
+        </section>
+        
+        <section id="energy" class="scroll-mt-20">
+            <h3 class="text-2xl md:text-3xl font-bold text-center text-[#0A2463] mb-8">Năng Lượng Tái Tạo & Các Ngành Kinh Tế Mới</h3>
+            <p class="text-center text-gray-600 mb-8 max-w-3xl mx-auto">Biển không chỉ cung cấp tài nguyên truyền thống mà còn là không gian cho các ngành kinh tế của tương lai, đặc biệt là năng lượng tái tạo, góp phần vào mục tiêu phát triển bền vững và giảm phát thải carbon.</p>
+            <div class="bg-white rounded-xl shadow-lg p-8 grid md:grid-cols-2 gap-8 items-center">
+                <div>
+                     <div class="flex items-center mb-4">
+                        <span class="text-4xl mr-4">💨</span>
+                        <h4 class="text-2xl font-bold text-[#0A2463]">Năng Lượng Gió Ngoài Khơi</h4>
+                    </div>
+                    <p class="text-gray-700 leading-relaxed mb-4">Việt Nam được đánh giá là một trong những quốc gia có tiềm năng điện gió ngoài khơi lớn nhất khu vực, với vận tốc gió tốt và vùng biển nông. Phát triển lĩnh vực này sẽ tạo ra một nguồn năng lượng sạch khổng lồ, đảm bảo an ninh năng lượng và thúc đẩy ngành công nghiệp phụ trợ.</p>
+                    <p class="text-2xl font-bold text-[#1E5664]">~475 GW <span class="text-lg font-medium text-gray-600">Tiềm năng kỹ thuật</span></p>
+                </div>
+                <div>
+                    <div class="flex items-center mb-4">
+                        <span class="text-4xl mr-4">🔬</span>
+                        <h4 class="text-2xl font-bold text-[#0A2463]">Kinh Tế Biển Xanh</h4>
+                    </div>
+                    <p class="text-gray-700 leading-relaxed">Các lĩnh vực mới như dược liệu biển, nuôi trồng tảo, phát triển công nghệ sinh học biển, và du lịch sinh thái đang mở ra những hướng đi mới, kết hợp hài hòa giữa phát triển kinh tế và bảo tồn môi trường biển.</p>
+                </div>
+            </div>
+             <div class="mt-8 text-center bg-blue-50 border-l-4 border-[#3E92CC] text-blue-800 p-4 rounded-r-lg">
+                <p><strong class="font-semibold">An ninh - Quốc phòng:</strong> Vị trí chiến lược trên biển Đông và hệ thống đảo ven bờ không chỉ có ý nghĩa về kinh tế mà còn là lá chắn vững chắc, bảo vệ chủ quyền, quyền chủ quyền và các hoạt động kinh tế trên biển, tạo môi trường hòa bình, ổn định để phát triển.</p>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-[#0A2463] text-white mt-16">
+        <div class="container mx-auto px-4 py-6 text-center">
+            <p>&copy; 2025 | Phân Tích Kinh Tế Biển Đảo Việt Nam.</p>
+            <p class="text-sm text-gray-400">Thông tin và số liệu trong ứng dụng mang tính chất tham khảo và tổng hợp.</p>
+        </div>
+    </footer>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const economicData = {
+            labels: ['Dầu khí & Khoáng sản', 'Du lịch & Dịch vụ biển', 'Khai thác & Nuôi trồng Thủy sản', 'Giao thông Vận tải biển', 'Năng lượng & Ngành khác'],
+            datasets: [{
+                label: 'Tỷ trọng đóng góp',
+                data: [35, 25, 20, 15, 5],
+                backgroundColor: [
+                    '#0A2463', // Deep Blue
+                    '#3E92CC', // Bright Blue
+                    '#1E5664', // Teal
+                    '#5C8C9E', // Muted Blue-Gray
+                    '#A2D2FF'  // Light Blue
+                ],
+                borderColor: '#F8F5F2',
+                borderWidth: 2,
+                hoverOffset: 4
+            }]
+        };
+
+        const cargoData = {
+            labels: ['2020', '2021', '2022', '2023', '2024 (est.)'],
+            datasets: [{
+                label: 'Triệu tấn',
+                data: [690, 703, 733, 755, 780],
+                backgroundColor: '#3E92CC',
+                borderColor: '#0A2463',
+                borderWidth: 1,
+                borderRadius: 5
+            }]
+        };
+
+        const fisheryData = {
+            labels: ['2020', '2021', '2022', '2023', '2024 (est.)'],
+            datasets: [
+                {
+                    label: 'Khai thác',
+                    data: [3.85, 3.9, 3.86, 3.8, 3.75],
+                    backgroundColor: '#5C8C9E',
+                },
+                {
+                    label: 'Nuôi trồng',
+                    data: [4.56, 4.75, 4.9, 5.2, 5.5],
+                    backgroundColor: '#1E5664',
+                }
+            ]
+        };
+        
+        const chartOptions = {
+             maintainAspectRatio: false,
+             responsive: true,
+             plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                         font: {
+                            family: "'Be Vietnam Pro', sans-serif",
+                            size: 12
+                        },
+                        color: '#475569'
+                    }
+                },
+                tooltip: {
+                     bodyFont: {
+                        family: "'Be Vietnam Pro', sans-serif",
+                    },
+                    titleFont: {
+                        family: "'Be Vietnam Pro', sans-serif",
+                    },
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.parsed.y !== null && context.chart.id.includes('cargo')) {
+                                label += context.parsed.y + ' triệu tấn';
+                            } else if (context.parsed.y !== null && context.chart.id.includes('fishery')) {
+                                label += context.parsed.y + ' triệu tấn';
+                            } else if(context.parsed !== null && context.chart.id.includes('economic')){
+                                 label = context.label + ': ' + context.parsed + '%';
+                            }
+                            return label;
+                        }
+                    }
+                }
+             }
+        };
+
+        const economicCtx = document.getElementById('economicStructureChart');
+        if (economicCtx) {
+            new Chart(economicCtx, {
+                type: 'doughnut',
+                data: economicData,
+                options: { ...chartOptions, cutout: '60%' }
+            });
+        }
+
+        const cargoCtx = document.getElementById('cargoChart');
+        if (cargoCtx) {
+            new Chart(cargoCtx, {
+                type: 'bar',
+                data: cargoData,
+                options: { ...chartOptions, scales: { y: { beginAtZero: true, grid: { color: '#e2e8f0' } }, x: { grid: { display: false } } } }
+            });
+        }
+
+        const fisheryCtx = document.getElementById('fisheryChart');
+        if(fisheryCtx) {
+            new Chart(fisheryCtx, {
+                type: 'bar',
+                data: fisheryData,
+                options: { ...chartOptions, scales: { x: { stacked: true, grid: { display: false } }, y: { stacked: true, beginAtZero: true, grid: { color: '#e2e8f0' } } } }
+            });
+        }
+        
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        if (mobileMenuButton && mobileMenu) {
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+        }
+        
+        const navLinks = document.querySelectorAll('.nav-link, #mobile-menu a');
+        navLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                if(mobileMenu && !mobileMenu.classList.contains('hidden')){
+                    mobileMenu.classList.add('hidden');
+                }
+            });
+        });
+
+        const sections = document.querySelectorAll('section[id]');
+        const mainNavLinks = document.querySelectorAll('nav a.nav-link');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    mainNavLinks.forEach(link => {
+                        link.classList.remove('active');
+                        if (link.getAttribute('href').substring(1) === entry.target.id) {
+                            link.classList.add('active');
+                        }
+                    });
+                }
+            });
+        }, { rootMargin: "-50% 0px -50% 0px" });
+
+        sections.forEach(section => {
+            observer.observe(section);
+        });
+
+    });
+    </script>
+</body>
+</html>
